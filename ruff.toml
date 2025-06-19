@@ -1,0 +1,44 @@
+[tool.ruff]
+# Enable common rule sets
+select = [
+  "E",    # pycodestyle errors
+  "F",    # pyflakes (undefined names, import errors)
+  "I",    # isort (import sorting)
+  "UP",   # pyupgrade (Python syntax upgrades)
+  "B",    # flake8-bugbear (common bugs)
+  "SIM",  # flake8-simplify
+  "A",    # flake8-builtins (avoid shadowing)
+]
+
+# Ignore rules you don't care about
+ignore = [
+  "E501",  # line too long (leave to black if using)
+]
+
+# Apply to these file types
+include = ["*.py"]
+
+# Exclude common folders
+exclude = [
+  ".git",
+  ".mypy_cache",
+  ".ruff_cache",
+  "__pycache__",
+  "build",
+  "dist",
+  "venv",
+  ".venv",
+]
+
+# Target Python version
+target-version = "py311"
+
+# Enable automatic fixing when running `ruff --fix`
+fix = true
+
+# Set import sorting behavior (like isort)
+[tool.ruff.isort]
+known-first-party = ["your_project"]
+force-single-line = false
+lines-between-types = 1
+lines-after-imports = 2

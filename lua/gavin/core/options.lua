@@ -1,7 +1,7 @@
 vim.cmd("let g:netrw_liststyle = 3")
 
-vim.api.nvim_create_autocmd('ColorScheme', {
-  command = [[highlight CursorLine gui=bold guibg=NONE cterm=underline]]
+vim.api.nvim_create_autocmd("ColorScheme", {
+	command = [[highlight CursorLine gui=bold guibg=NONE cterm=underline]],
 })
 
 local opt = vim.opt
