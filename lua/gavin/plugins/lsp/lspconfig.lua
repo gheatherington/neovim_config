@@ -10,7 +10,6 @@ return {
 	},
 	config = function()
 		-- import lspconfig plugin
-		local lspconfig = require("lspconfig")
 
 		-- import mason_lspconfig plugin
 		local mason_lspconfig = require("mason-lspconfig")
@@ -92,10 +91,10 @@ return {
 			},
 		})
 
-		vim.lsp.config.bashls = {
+		vim.lsp.config("bashls", {
 			cmd = { "bash-language-server", "start" },
 			filetypes = { "bash", "sh" },
-		}
+		})
 		vim.lsp.enable("bashls")
 
 		local util = require("lspconfig.util")
@@ -122,7 +121,7 @@ return {
 
 		vim.lsp.enable("ruff")
 
-		lspconfig.pyright.setup({
+		vim.lsp.config("pyright", {
 			before_init = function(_, config)
 				vim.notify("Pyright (LSP) Path " .. venv_path)
 				config.settings.python.pythonPath = venv_path
@@ -133,6 +132,8 @@ return {
 				}
 			end,
 		})
+
+		vim.lsp.enable("pyright")
 
 		vim.lsp.config("lua_ls", {
 			settings = {
