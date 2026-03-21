@@ -3,6 +3,7 @@
 ## Location & Dotfiles
 
 - **Config root:** `~/.dotfiles/.config/nvim/` (symlinked to `~/.config/nvim/`)
+- **GitHub remote:** `https://github.com/gheatherington/neovim_config`
 - **Plugin data:** `~/.local/share/nvim/lazy/`
 - **Plugin lockfile:** `~/.dotfiles/.config/nvim/lazy-lock.json`
 
@@ -32,6 +33,51 @@ lua/gavin/
 ## Plugin Manager
 
 **lazy.nvim** (stable branch). To add a plugin, create a new file under `lua/gavin/plugins/` returning a plugin spec table. Run `:Lazy sync` in Neovim to install/remove. Run `:Lazy update` to update all plugins.
+
+### Installed Plugins (from lazy-lock.json)
+
+| Plugin | Branch |
+|---|---|
+| Comment.nvim | master |
+| LuaSnip | master |
+| alpha-nvim | main |
+| auto-session | main |
+| cmp-buffer / cmp-nvim-lsp / cmp-path / cmp_luasnip | main/master |
+| conform.nvim | master |
+| dressing.nvim | master |
+| friendly-snippets | main |
+| **fzf-lua** | main |
+| gitsigns.nvim | main |
+| indent-blankline.nvim | master |
+| lazy.nvim | main |
+| lazygit.nvim | main |
+| lspkind.nvim | master |
+| lualine.nvim | master |
+| mason.nvim + mason-lspconfig + mason-tool-installer | main |
+| neodev.nvim | main |
+| noice.nvim + nui.nvim + nvim-notify | main/master |
+| nvim-autopairs | master |
+| nvim-cmp | main |
+| nvim-colorizer.lua | master |
+| nvim-lint | master |
+| nvim-lsp-file-operations | master |
+| nvim-lspconfig | master |
+| nvim-surround | main |
+| nvim-tree.lua | master |
+| nvim-treesitter + nvim-ts-autotag + nvim-ts-context-commentstring | master/main |
+| nvim-ufo + promise-async | main |
+| nvim-web-devicons | master |
+| plenary.nvim | master |
+| render-markdown.nvim | main |
+| substitute.nvim | main |
+| tokyonight.nvim | main |
+| trouble.nvim | main |
+| **tv.nvim** | main |
+| vim-maximizer | master |
+| vim-tmux-navigator | master |
+| which-key.nvim | main |
+
+**Note:** telescope.nvim and telescope-fzf-native.nvim have been fully removed.
 
 ---
 
