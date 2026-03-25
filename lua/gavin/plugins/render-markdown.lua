@@ -16,5 +16,7 @@ return {
 		markdown.setup({
 			completions = { lsp = { enabled = true } },
 		})
+
+		vim.keymap.set("n", "<leader>rm", "<cmd>RenderMarkdown toggle<cr>", { desc = "Toggle markdown render" })
 	end,
 }
