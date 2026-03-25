@@ -197,7 +197,9 @@ Format-on-save is enabled (async=false, timeout=1000ms, lsp_fallback=true).
 | Key | Action |
 |---|---|
 | `jk` (insert) | Exit insert mode |
+| `<M-BS>` (insert) | Delete word backwards (Option+Delete) |
 | `<leader>nh` | Clear search highlights |
+| `<leader>tw` | Toggle line wrap |
 | `<leader>+` / `<leader>-` | Increment / decrement number |
 | `<leader>sv/sh/se/sx` | Split vertical / horizontal / equalize / close |
 | `<leader>to/tx/tn/tp/tf` | Tab: new / close / next / prev / current buf in tab |
