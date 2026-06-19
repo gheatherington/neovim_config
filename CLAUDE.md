@@ -343,10 +343,8 @@ Treesitter-based folding is **disabled** (commented out). Folding is handled ent
 
 ## Known Issues / TODOs
 
-1. **`vim.lsp.enable("lua_ls")` is missing** in lspconfig.lua — lua_ls relies on mason-lspconfig auto-setup fallback. Worth adding explicitly for consistency with the other servers.
+1. **ruff runs twice** — as an LSP server (`vim.lsp.enable("ruff")`) AND as a linter in nvim-lint. This can produce duplicate diagnostics for Python files.
 
-2. **ruff runs twice** — as an LSP server (`vim.lsp.enable("ruff")`) AND as a linter in nvim-lint. This can produce duplicate diagnostics for Python files.
+2. **beautysh and shellcheck are installed but unwired** — both in mason-tool-installer but not configured in conform or nvim-lint respectively.
 
-3. **beautysh and shellcheck are installed but unwired** — both in mason-tool-installer but not configured in conform or nvim-lint respectively.
-
-4. **Python path detection is startup-time only** — `get_python_path(vim.fn.getcwd())` runs once when Neovim starts, not per-buffer. Opening files in a different project won't pick up that project's venv.
+3. **Python path detection is startup-time only** — `get_python_path(vim.fn.getcwd())` runs once when Neovim starts, not per-buffer. Opening files in a different project won't pick up that project's venv.
