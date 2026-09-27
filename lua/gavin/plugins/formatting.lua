@@ -21,12 +21,12 @@ return {
 				lua = { "stylua" },
 				sh = { "beautysh" },
 				bash = { "beautysh" },
-				python = { "isort", "black" },
+				python = { "ruff_organize_imports", "ruff_format" },
 			},
 			-- NOTE: timeout_ms is one shared budget for the WHOLE formatter chain
-			-- for a filetype, not per-formatter. Chaining two CPython processes
-			-- (isort ~100ms + black ~150ms) fit inside 1000ms only on a quiet
-			-- machine; under load either one would time out. 5000ms gives margin.
+			-- for a filetype, not per-formatter. Python previously chained isort
+			-- (~100ms) and black (~150ms) and would intermittently blow a 1000ms
+			-- ceiling; ruff does both steps in ~8ms each as a single binary.
 			format_on_save = {
 				lsp_format = "fallback",
 				async = false,

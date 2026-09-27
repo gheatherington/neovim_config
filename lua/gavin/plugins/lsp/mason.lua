@@ -30,7 +30,11 @@ return {
 			-- added automatic_enable, which defaults to true: every installed
 			-- server is vim.lsp.enable()'d automatically. Servers we configure
 			-- explicitly in lspconfig.lua are simply enabled twice (idempotent).
-			automatic_enable = true,
+			-- Excludes pyright: it was replaced by basedpyright, and if the mason
+			-- package lingers on disk automatic_enable would silently run both.
+			automatic_enable = {
+				exclude = { "pyright" },
+			},
 			-- list of servers for mason to install
 			ensure_installed = {
 				"html",
@@ -41,7 +45,7 @@ return {
 				"graphql",
 				"emmet_ls",
 				"prismals",
-				"pyright",
+				"basedpyright",
 				"bashls",
 			},
 		})
@@ -50,9 +54,7 @@ return {
 			ensure_installed = {
 				"prettier", -- prettier formatter
 				"stylua", -- lua formatter
-				"isort", -- python formatter
-				"black", -- python formatter
-				"ruff",
+				"ruff", -- python linter (LSP) + formatter
 				"eslint_d",
 				"beautysh",
 				"shellcheck",

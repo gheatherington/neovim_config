@@ -67,6 +67,16 @@ return {
 				opts.desc = "Show documentation for what is under cursor"
 				keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
 
+				if vim.lsp.inlay_hint then
+					opts.desc = "Toggle inlay hints"
+					keymap.set("n", "<leader>ih", function()
+						vim.lsp.inlay_hint.enable(
+							not vim.lsp.inlay_hint.is_enabled({ bufnr = ev.buf }),
+							{ bufnr = ev.buf }
+						)
+					end, opts)
+				end
+
 				opts.desc = "Restart LSP"
 				keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
 			end,
@@ -132,13 +142,34 @@ return {
 
 		vim.lsp.enable("ruff")
 
-		vim.lsp.config("pyright", {
+		vim.lsp.config("basedpyright", {
 			settings = {
-				python = {
+				basedpyright = {
 					analysis = {
 						autoSearchPaths = true,
-						useLibraryCodeForTypes = true,
-						diagnosticMode = "workspace", -- full project scan
+						-- basedpyright defaults to a stricter mode than pyright and
+						-- reports "Type of X is unknown" style diagnostics everywhere.
+						-- "standard" matches the pyright behaviour this replaced.
+						typeCheckingMode = "standard",
+						diagnosticSeverityOverrides = {
+							-- Rules ruff already covers; leaving them on reports every
+							-- unused import/variable and deprecation twice.
+							reportUnusedImport = "none",
+							reportUnusedVariable = "none",
+							reportDeprecated = "none",
+						},
+						-- openFilesOnly (the default) rather than "workspace": a
+						-- whole-project scan costs CPU/memory proportional to repo size.
+						diagnosticMode = "openFilesOnly",
+						inlayHints = {
+							variableTypes = true,
+							callArgumentNames = true,
+							functionReturnTypes = true,
+							genericTypes = false,
+						},
+						-- NOTE: useLibraryCodeForTypes is deliberately unset. Upstream
+						-- discourages setting it, because doing so overrides per-project
+						-- configuration in pyproject.toml. Its default is already true.
 					},
 				},
 			},
@@ -147,12 +178,13 @@ return {
 			before_init = function(_, config)
 				local python_path = get_python_path(config.root_dir)
 				if python_path then
-					config.settings.python.pythonPath = python_path
+					config.settings.python =
+						vim.tbl_deep_extend("force", config.settings.python or {}, { pythonPath = python_path })
 				end
 			end,
 		})
 
-		vim.lsp.enable("pyright")
+		vim.lsp.enable("basedpyright")
 
 		vim.lsp.config("lua_ls", {
 			settings = {

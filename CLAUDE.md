@@ -121,13 +121,17 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 |---|---|---|
 | `bashls` | `vim.lsp.config` + `vim.lsp.enable` | cmd: `bash-language-server start`, ft: bash, sh |
 | `ruff` | `vim.lsp.config` + `vim.lsp.enable` | Python linter-as-LSP; sole source of ruff diagnostics (not an nvim-lint linter) |
-| `pyright` | `vim.lsp.config` + `vim.lsp.enable` | Resolves the interpreter per project root in `before_init`: `.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3` → `python`. Runs `diagnosticMode = "workspace"` |
+| `basedpyright` | `vim.lsp.config` + `vim.lsp.enable` | Replaced pyright. Resolves the interpreter per project root in `before_init`: `.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3` → `python`. `typeCheckingMode = "standard"`, `diagnosticMode = "openFilesOnly"`, inlay hints on |
 | `lua_ls` | `vim.lsp.config` + `vim.lsp.enable` | Lua API types for config/plugin editing come from lazydev.nvim |
 | html, cssls, tailwindcss, svelte, graphql, emmet_ls, prismals | mason-lspconfig `ensure_installed` | No explicit config; enabled by mason-lspconfig v2's `automatic_enable = true` |
 
 **Global capabilities:** `vim.lsp.config("*", { capabilities = cmp_nvim_lsp.default_capabilities() })` in `lspconfig.lua` advertises nvim-cmp's completion capabilities (snippet/resolve support) to every server.
 
-**mason-lspconfig v2:** `setup_handlers()` and `automatic_installation` were removed upstream; `automatic_enable` defaults to `true`, so every installed server is `vim.lsp.enable()`'d automatically. Servers configured explicitly in `lspconfig.lua` are simply enabled twice (idempotent).
+**Python diagnostics split:** basedpyright reports type errors only; ruff reports lint only. basedpyright's `reportUnusedImport`/`reportUnusedVariable`/`reportDeprecated` are set to `"none"` because ruff already covers them — leaving them on reported every unused import twice. `typeCheckingMode` is pinned to `"standard"` because basedpyright's default is stricter than pyright's and floods the buffer with "Type of X is unknown".
+
+**`useLibraryCodeForTypes` is deliberately unset** — upstream discourages setting it, since it overrides per-project `pyproject.toml`. Default is already `true`.
+
+**mason-lspconfig v2:** `setup_handlers()` and `automatic_installation` were removed upstream; `automatic_enable` defaults to `true`, so every installed server is `vim.lsp.enable()`'d automatically. It is set to `{ exclude = { "pyright" } }` here: pyright was replaced by basedpyright, and if its mason package lingers on disk automatic_enable would silently run both at once. Servers configured explicitly in `lspconfig.lua` are simply enabled twice (idempotent).
 
 ### LSP Keymaps (buffer-local, set on LspAttach)
 
@@ -145,11 +149,12 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 | `<leader>d` | `vim.diagnostic.open_float` | Line diagnostics float |
 | `[d` / `]d` | `vim.diagnostic.jump({ count = -1 / 1 })` | Navigate diagnostics |
 | `K` | `vim.lsp.buf.hover` | Hover documentation |
+| `<leader>ih` | `vim.lsp.inlay_hint.enable` | Toggle inlay hints (buffer-local) |
 | `<leader>rs` | `:LspRestart<CR>` | Restart LSP |
 
 ### Mason-Installed Tools
 
-**Formatters** (via conform.nvim): `prettier` (JS/TS/CSS/HTML/JSON/YAML/MD/GraphQL/Svelte/Liquid), `stylua` (Lua), `isort` + `black` (Python), `beautysh` (sh/bash)
+**Formatters** (via conform.nvim): `prettier` (JS/TS/CSS/HTML/JSON/YAML/MD/GraphQL/Svelte/Liquid), `stylua` (Lua), `ruff_organize_imports` + `ruff_format` (Python), `beautysh` (sh/bash)
 
 **Linters** (via nvim-lint): `eslint_d` (JS/TS/Svelte) only.
 
@@ -164,7 +169,7 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 
 Format-on-save is enabled (`async = false`, `timeout_ms = 5000`, `lsp_format = "fallback"`).
 
-**`timeout_ms` is one shared budget for the whole formatter chain, not per-formatter.** Python runs `isort` (~100ms) then `black` (~150ms); the old 1000ms ceiling left so little margin that either tool would intermittently time out under load. If Python formatting ever needs to be faster, `ruff_organize_imports` + `ruff_format` do the same work in ~8ms each, at the cost of no longer being byte-for-byte black.
+**`timeout_ms` is one shared budget for the whole formatter chain, not per-formatter.** Python formerly chained `isort` (~100ms) and `black` (~150ms) and would intermittently blow a 1000ms ceiling. It now uses ruff for both steps (~8ms each, single binary, 8x faster overall); output was byte-identical to isort+black when measured, though ruff targets black compatibility rather than guaranteeing it. isort and black are no longer installed.
 
 ---
 
@@ -351,7 +356,7 @@ Treesitter-based folding is **disabled** (commented out). Folding is handled ent
 
 All three previously-recorded known issues are resolved (see git history):
 
-1. ~~ruff runs twice~~ — fixed; ruff removed from nvim-lint, LSP server is the single source of Python diagnostics.
+1. ~~ruff runs twice~~ — fixed; ruff removed from nvim-lint, LSP server is the single source of ruff diagnostics.
 2. ~~beautysh and shellcheck unwired~~ — beautysh wired into conform for sh/bash; shellcheck reaches you via bash-language-server.
 3. ~~Python path detection is startup-time only~~ — `get_python_path` now runs per project root inside pyright's `before_init`.
 
