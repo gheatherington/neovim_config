@@ -1,5 +1,9 @@
 return {
 	"nvim-treesitter/nvim-treesitter",
+	-- Pin master explicitly: the repo default branch is now `main`, which is an
+	-- incompatible rewrite with no `nvim-treesitter.configs` module. Without
+	-- this, regenerating lazy-lock.json would silently clone `main` and break.
+	branch = "master",
 	event = { "BufReadPre", "BufNewFile" },
 	build = ":TSUpdate",
 	dependencies = {

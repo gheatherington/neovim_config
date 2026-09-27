@@ -10,7 +10,10 @@ return {
 			javascriptreact = { "eslint_d" },
 			typescriptreact = { "eslint_d" },
 			svelte = { "eslint_d" },
-			python = { "ruff" },
+			-- NOTE: python/sh/bash are deliberately absent here. ruff already runs
+			-- as an LSP server (vim.lsp.enable("ruff")) and bash-language-server
+			-- runs shellcheck internally; listing either as a nvim-lint linter
+			-- too produced every diagnostic twice.
 		}
 
 		local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })

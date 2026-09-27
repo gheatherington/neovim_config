@@ -65,12 +65,12 @@ lua/gavin/
 | lazygit.nvim | main |
 | lspkind.nvim | master |
 | lualine.nvim | master |
-| mason.nvim + mason-lspconfig + mason-tool-installer | main |
-| neodev.nvim | main |
+| mason.nvim + mason-lspconfig (mason-org) + mason-tool-installer | main |
+| lazydev.nvim | main |
 | noice.nvim + nui.nvim + nvim-notify | main/master |
 | nvim-autopairs | master |
 | nvim-cmp | main |
-| nvim-colorizer.lua | master |
+| nvim-colorizer.lua (catgoose fork) | master |
 | nvim-lint | master |
 | nvim-lsp-file-operations | master |
 | nvim-lspconfig | master |
@@ -120,10 +120,14 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 | Server | Config Method | Notes |
 |---|---|---|
 | `bashls` | `vim.lsp.config` + `vim.lsp.enable` | cmd: `bash-language-server start`, ft: bash, sh |
-| `ruff` | `vim.lsp.config` + `vim.lsp.enable` | Python linter-as-LSP; also runs as nvim-lint linter (potential duplicate diagnostics) |
-| `pyright` | `vim.lsp.config` + `vim.lsp.enable` | Auto-detects `.venv/bin/python` in cwd at startup; falls back to system python. Runs `diagnosticMode = "workspace"` |
-| `lua_ls` | `vim.lsp.config` only | **`vim.lsp.enable("lua_ls")` is missing** — handled by mason-lspconfig auto-setup fallback |
-| html, cssls, tailwindcss, svelte, graphql, emmet_ls, prismals | mason-lspconfig `ensure_installed` | Auto-setup, no explicit config overrides |
+| `ruff` | `vim.lsp.config` + `vim.lsp.enable` | Python linter-as-LSP; sole source of ruff diagnostics (not an nvim-lint linter) |
+| `pyright` | `vim.lsp.config` + `vim.lsp.enable` | Resolves the interpreter per project root in `before_init`: `.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3` → `python`. Runs `diagnosticMode = "workspace"` |
+| `lua_ls` | `vim.lsp.config` + `vim.lsp.enable` | Lua API types for config/plugin editing come from lazydev.nvim |
+| html, cssls, tailwindcss, svelte, graphql, emmet_ls, prismals | mason-lspconfig `ensure_installed` | No explicit config; enabled by mason-lspconfig v2's `automatic_enable = true` |
+
+**Global capabilities:** `vim.lsp.config("*", { capabilities = cmp_nvim_lsp.default_capabilities() })` in `lspconfig.lua` advertises nvim-cmp's completion capabilities (snippet/resolve support) to every server.
+
+**mason-lspconfig v2:** `setup_handlers()` and `automatic_installation` were removed upstream; `automatic_enable` defaults to `true`, so every installed server is `vim.lsp.enable()`'d automatically. Servers configured explicitly in `lspconfig.lua` are simply enabled twice (idempotent).
 
 ### LSP Keymaps (buffer-local, set on LspAttach)
 
@@ -139,17 +143,17 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 | `<leader>rn` | `vim.lsp.buf.rename` | Smart rename |
 | `<leader>D` | `FzfLua diagnostics_document` | Buffer diagnostics |
 | `<leader>d` | `vim.diagnostic.open_float` | Line diagnostics float |
-| `[d` / `]d` | `vim.diagnostic.goto_prev/next` | Navigate diagnostics |
+| `[d` / `]d` | `vim.diagnostic.jump({ count = -1 / 1 })` | Navigate diagnostics |
 | `K` | `vim.lsp.buf.hover` | Hover documentation |
 | `<leader>rs` | `:LspRestart<CR>` | Restart LSP |
 
 ### Mason-Installed Tools
 
-**Formatters** (via conform.nvim): `prettier` (JS/TS/CSS/HTML/JSON/YAML/MD/GraphQL/Svelte/Liquid), `stylua` (Lua), `isort` + `black` (Python)
+**Formatters** (via conform.nvim): `prettier` (JS/TS/CSS/HTML/JSON/YAML/MD/GraphQL/Svelte/Liquid), `stylua` (Lua), `isort` + `black` (Python), `beautysh` (sh/bash)
 
-**Linters** (via nvim-lint): `eslint_d` (JS/TS/Svelte), `ruff` (Python)
+**Linters** (via nvim-lint): `eslint_d` (JS/TS/Svelte) only.
 
-**Installed but NOT wired up:** `beautysh` (shell formatter), `shellcheck` (shell linter) — both installed via mason-tool-installer but have no entries in conform or nvim-lint.
+`ruff` and `shellcheck` are deliberately NOT nvim-lint linters: ruff already runs as an LSP server, and `bash-language-server` runs shellcheck internally. Listing either here produced every diagnostic twice.
 
 ### Format/Lint Keymaps
 
@@ -158,7 +162,9 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 | `<leader>mp` | Format file or visual range (conform.nvim) |
 | `<leader>l` | Trigger lint on current file (nvim-lint) |
 
-Format-on-save is enabled (async=false, timeout=1000ms, lsp_fallback=true).
+Format-on-save is enabled (`async = false`, `timeout_ms = 5000`, `lsp_format = "fallback"`).
+
+**`timeout_ms` is one shared budget for the whole formatter chain, not per-formatter.** Python runs `isort` (~100ms) then `black` (~150ms); the old 1000ms ceiling left so little margin that either tool would intermittently time out under load. If Python formatting ever needs to be faster, `ruff_organize_imports` + `ruff_format` do the same work in ~8ms each, at the cost of no longer being byte-for-byte black.
 
 ---
 
@@ -343,8 +349,14 @@ Treesitter-based folding is **disabled** (commented out). Folding is handled ent
 
 ## Known Issues / TODOs
 
-1. **ruff runs twice** — as an LSP server (`vim.lsp.enable("ruff")`) AND as a linter in nvim-lint. This can produce duplicate diagnostics for Python files.
+All three previously-recorded known issues are resolved (see git history):
 
-2. **beautysh and shellcheck are installed but unwired** — both in mason-tool-installer but not configured in conform or nvim-lint respectively.
+1. ~~ruff runs twice~~ — fixed; ruff removed from nvim-lint, LSP server is the single source of Python diagnostics.
+2. ~~beautysh and shellcheck unwired~~ — beautysh wired into conform for sh/bash; shellcheck reaches you via bash-language-server.
+3. ~~Python path detection is startup-time only~~ — `get_python_path` now runs per project root inside pyright's `before_init`.
 
-3. **Python path detection is startup-time only** — `get_python_path(vim.fn.getcwd())` runs once when Neovim starts, not per-buffer. Opening files in a different project won't pick up that project's venv.
+Remaining, non-urgent:
+
+- **`stevearc/dressing.nvim` is archived** upstream (author recommends `snacks.nvim` for `vim.ui.*`). Still functions; no action taken.
+- **`szw/vim-maximizer` is ancient** (last upstream commit 2015) but feature-complete.
+- **Indentation is inconsistent across plugin specs** — some files are tab-indented (stylua-clean), others space-indented. `stylua --check lua/` reports diffs on the space-indented ones. Not reformatted to avoid a repo-wide diff.

@@ -2,18 +2,12 @@ return {
 	"neovim/nvim-lspconfig",
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
-		"williamboman/mason.nvim",
-		"williamboman/mason-lspconfig.nvim", -- make sure this is included!
+		"mason-org/mason.nvim",
+		"mason-org/mason-lspconfig.nvim",
 		"hrsh7th/cmp-nvim-lsp",
 		{ "antosha417/nvim-lsp-file-operations", config = true },
-		{ "folke/neodev.nvim", opts = {} },
 	},
 	config = function()
-		-- import lspconfig plugin
-
-		-- import mason_lspconfig plugin
-		local mason_lspconfig = require("mason-lspconfig")
-
 		-- import cmp-nvim-lsp plugin
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
@@ -57,11 +51,18 @@ return {
 				opts.desc = "Show line diagnostics"
 				keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts) -- show diagnostics for line
 
+				-- vim.diagnostic.goto_prev/goto_next were deprecated in 0.11 in favour
+				-- of vim.diagnostic.jump(); the JumpOpts `float` key was in turn
+				-- deprecated in 0.12, so use on_jump/defaults instead.
 				opts.desc = "Go to previous diagnostic"
-				keymap.set("n", "[d", vim.diagnostic.goto_prev, opts) -- jump to previous diagnostic in buffer
+				keymap.set("n", "[d", function()
+					vim.diagnostic.jump({ count = -1 })
+				end, opts)
 
 				opts.desc = "Go to next diagnostic"
-				keymap.set("n", "]d", vim.diagnostic.goto_next, opts) -- jump to next diagnostic in buffer
+				keymap.set("n", "]d", function()
+					vim.diagnostic.jump({ count = 1 })
+				end, opts)
 
 				opts.desc = "Show documentation for what is under cursor"
 				keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
@@ -71,8 +72,10 @@ return {
 			end,
 		})
 
-		-- used to enable autocompletion (assign to every lsp server config)
-		local capabilities = cmp_nvim_lsp.default_capabilities()
+		-- Advertise nvim-cmp's completion capabilities to every server.
+		vim.lsp.config("*", {
+			capabilities = cmp_nvim_lsp.default_capabilities(),
+		})
 
 		vim.diagnostic.config({
 			signs = {
@@ -100,39 +103,52 @@ return {
 		})
 		vim.lsp.enable("bashls")
 
-		local util = require("lspconfig.util")
-		local path = util.path
-
+		-- Resolve the interpreter for a given project root: prefer an in-project
+		-- venv, then an activated $VIRTUAL_ENV, then whatever is on $PATH.
 		local function get_python_path(workspace)
-			local venv = path.join(workspace, ".venv", "bin", "python")
-			if vim.fn.executable(venv) == 1 then
-				return venv
-			else
-				return vim.fn.exepath("python")
+			if workspace then
+				for _, dir in ipairs({ ".venv", "venv", ".env" }) do
+					local candidate = vim.fs.joinpath(workspace, dir, "bin", "python")
+					if vim.fn.executable(candidate) == 1 then
+						return candidate
+					end
+				end
 			end
+
+			local venv = vim.env.VIRTUAL_ENV
+			if venv then
+				local candidate = vim.fs.joinpath(venv, "bin", "python")
+				if vim.fn.executable(candidate) == 1 then
+					return candidate
+				end
+			end
+
+			local exe = vim.fn.exepath("python3")
+			if exe == "" then
+				exe = vim.fn.exepath("python")
+			end
+			return exe ~= "" and exe or nil
 		end
-
-		local venv_path = get_python_path(vim.fn.getcwd())
-
-		vim.lsp.config("ruff", {
-			init_options = {
-				settings = {
-					-- Ruff language server settings go here
-				},
-			},
-		})
 
 		vim.lsp.enable("ruff")
 
 		vim.lsp.config("pyright", {
+			settings = {
+				python = {
+					analysis = {
+						autoSearchPaths = true,
+						useLibraryCodeForTypes = true,
+						diagnosticMode = "workspace", -- full project scan
+					},
+				},
+			},
+			-- Resolved per project root rather than once at startup, so opening a
+			-- file in another project picks up that project's venv.
 			before_init = function(_, config)
-				vim.notify("Pyright (LSP) Path " .. venv_path)
-				config.settings.python.pythonPath = venv_path
-				config.settings.python.analysis = {
-					autoSearchPaths = true,
-					useLibraryCodeForTypes = true,
-					diagnosticMode = "workspace", -- full project scan
-				}
+				local python_path = get_python_path(config.root_dir)
+				if python_path then
+					config.settings.python.pythonPath = python_path
+				end
 			end,
 		})
 

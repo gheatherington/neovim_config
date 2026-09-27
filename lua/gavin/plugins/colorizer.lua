@@ -1,7 +1,11 @@
 return {
-	"norcalli/nvim-colorizer.lua",
-	config = function()
-		require("colorizer").setup({ "*" }, {
+	-- Maintained fork of norcalli/nvim-colorizer.lua (upstream is unmaintained and
+	-- still calls the deprecated vim.tbl_flatten).
+	"catgoose/nvim-colorizer.lua",
+	event = "BufReadPre",
+	opts = {
+		filetypes = { "*" },
+		user_default_options = {
 			RGB = true,
 			RRGGBB = true,
 			names = true,
@@ -11,6 +15,6 @@ return {
 			css = true,
 			css_fn = true,
 			mode = "background",
-		})
-	end,
+		},
+	},
 }

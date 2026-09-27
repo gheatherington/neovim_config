@@ -1,8 +1,8 @@
 return {
-	"williamboman/mason.nvim",
+	"mason-org/mason.nvim",
 	dependencies = {
 		"neovim/nvim-lspconfig",
-		"williamboman/mason-lspconfig.nvim",
+		"mason-org/mason-lspconfig.nvim",
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 	},
 	config = function()
@@ -26,6 +26,11 @@ return {
 		})
 
 		mason_lspconfig.setup({
+			-- mason-lspconfig v2 removed setup_handlers/automatic_installation and
+			-- added automatic_enable, which defaults to true: every installed
+			-- server is vim.lsp.enable()'d automatically. Servers we configure
+			-- explicitly in lspconfig.lua are simply enabled twice (idempotent).
+			automatic_enable = true,
 			-- list of servers for mason to install
 			ensure_installed = {
 				"html",
