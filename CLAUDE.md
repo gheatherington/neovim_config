@@ -355,6 +355,8 @@ All three previously-recorded known issues are resolved (see git history):
 2. ~~beautysh and shellcheck unwired~~ — beautysh wired into conform for sh/bash; shellcheck reaches you via bash-language-server.
 3. ~~Python path detection is startup-time only~~ — `get_python_path` now runs per project root inside pyright's `before_init`.
 
+**luarocks:** `rocks = { enabled = false }` is set in `lazy.lua`. No installed plugin needs a rock — the six shipping a `.rockspec` (gitsigns, nui, nvim-cmp, nvim-lint, nvim-lspconfig, plenary) all have a `/lua` dir, a simple build, and no non-Lua deps. Leaving it enabled only made `:checkhealth lazy` error about an unbuilt hererocks. Re-enable if a future plugin genuinely requires luarocks.
+
 Remaining, non-urgent:
 
 - **`stevearc/dressing.nvim` is archived** upstream (author recommends `snacks.nvim` for `vim.ui.*`). Still functions; no action taken.

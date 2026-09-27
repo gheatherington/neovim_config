@@ -19,4 +19,11 @@ require("lazy").setup({ { import = "gavin.plugins" }, { import = "gavin.plugins.
 	change_detection = {
 		notify = false,
 	},
+	-- No installed plugin needs a rock: the six that ship a .rockspec all have
+	-- a /lua dir, a simple build, and no non-Lua dependencies. Leaving rocks
+	-- enabled only made :checkhealth lazy error about an unbuilt hererocks
+	-- (private Lua 5.1 + luarocks) that nothing would ever use.
+	rocks = {
+		enabled = false,
+	},
 })
