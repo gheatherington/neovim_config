@@ -21,6 +21,10 @@ opt.wrap = false
 opt.ignorecase = true
 opt.smartcase = true
 
+-- Preview :substitute results in a split before committing, rather than only
+-- highlighting matches inline (the "nosplit" default).
+opt.inccommand = "split"
+
 opt.cursorline = true
 
 opt.termguicolors = true
