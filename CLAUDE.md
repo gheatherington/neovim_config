@@ -197,6 +197,7 @@ Format-on-save is enabled (`async = false`, `timeout_ms = 5000`, `lsp_format = "
 - **Clipboard:** `unnamedplus` (system clipboard)
 - **Splits:** right + below
 - **Search:** ignorecase + smartcase
+- **`inccommand = "split"`:** `:substitute` shows a live preview of the resulting lines in a split before you commit (the default, `nosplit`, only highlights matches inline)
 - **No swapfile, no line wrap**
 - **termguicolors:** true
 - **signcolumn:** always shown
@@ -315,6 +316,7 @@ diskutil unmount force ~/mnt/<host>
 | `ys{m}{c}` / `ds{c}` / `cs{o}{n}` | surround | Add / delete / change surround |
 | `<leader>sm` | vim-maximizer | Maximize / restore split |
 | `<leader>a` | alpha | Show dashboard |
+| `<leader>rm` | render-markdown | Toggle markdown rendering |
 | `<leader>wr/ws` | auto-session | Restore / save session |
 
 ---
@@ -352,13 +354,23 @@ Treesitter-based folding is **disabled** (commented out). Folding is handled ent
 
 ---
 
+## Ruff Configuration
+
+There is deliberately **no `ruff.toml` in this repo**. One used to live here and was broken: it used `[tool.ruff]` / `[tool.ruff.isort]`, which are only valid inside `pyproject.toml`. A standalone `ruff.toml` puts settings at the top level, with `select`/`ignore` under `[lint]` and isort under `[lint.isort]`. Because it failed to *parse*, ruff aborted instead of falling back to defaults, so Python files opened with this directory as cwd got no linting at all and the LSP logged `Error while resolving settings from workspace`.
+
+The corrected config now lives at **`~/.config/ruff/ruff.toml`** (ruff's user-level XDG location), where it applies to any Python file not already covered by a project config. It enables `E`, `F`, `I`, `UP`, `B`, `SIM`, `A`, ignores `E501`, targets py311, and sets `fix = true`.
+
+**Scope caveat:** a project-level `pyproject.toml` or `ruff.toml` *replaces* the user-level file entirely rather than merging with it. Any repo with its own ruff config ignores these settings completely.
+
+---
+
 ## Known Issues / TODOs
 
 All three previously-recorded known issues are resolved (see git history):
 
 1. ~~ruff runs twice~~ — fixed; ruff removed from nvim-lint, LSP server is the single source of ruff diagnostics.
 2. ~~beautysh and shellcheck unwired~~ — beautysh wired into conform for sh/bash; shellcheck reaches you via bash-language-server.
-3. ~~Python path detection is startup-time only~~ — `get_python_path` now runs per project root inside pyright's `before_init`.
+3. ~~Python path detection is startup-time only~~ — `get_python_path` now runs per project root inside basedpyright's `before_init`.
 
 **luarocks:** `rocks = { enabled = false }` is set in `lazy.lua`. No installed plugin needs a rock — the six shipping a `.rockspec` (gitsigns, nui, nvim-cmp, nvim-lint, nvim-lspconfig, plenary) all have a `/lua` dir, a simple build, and no non-Lua deps. Leaving it enabled only made `:checkhealth lazy` error about an unbuilt hererocks. Re-enable if a future plugin genuinely requires luarocks.
 
@@ -366,4 +378,7 @@ Remaining, non-urgent:
 
 - **`stevearc/dressing.nvim` is archived** upstream (author recommends `snacks.nvim` for `vim.ui.*`). Still functions; no action taken.
 - **`szw/vim-maximizer` is ancient** (last upstream commit 2015) but feature-complete.
-- **Indentation is inconsistent across plugin specs** — some files are tab-indented (stylua-clean), others space-indented. `stylua --check lua/` reports diffs on the space-indented ones. Not reformatted to avoid a repo-wide diff.
+- **A stale duplicate config exists** at `~/.dotfiles/.config/.config/nvim` (note the doubled `.config`) — an old clone of this same repo at commit `d2410f7`, clean working tree, not on any runtimepath, untouched since Aug 2025. It is 16 commits behind and contains nothing unique. Safe to delete; left in place.
+- **`.venv/` (37 MB) sits in this repo** but self-ignores via `.venv/.gitignore` containing `*`, so git never sees it. Note that `get_python_path` will pick its interpreter for any Python file opened with this directory as the project root.
+
+Formatting is consistent repo-wide: `stylua --check lua/ init.lua` passes. There is no `.stylua.toml`, so stylua's defaults (tabs) apply — the same style format-on-save enforces.
