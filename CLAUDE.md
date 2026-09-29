@@ -264,6 +264,7 @@ diskutil unmount force ~/mnt/<host>
 **tv channel:** `tv sshfs-mounts` — browse active mounts, `Ctrl-u` unmount, `Ctrl-f` force unmount. Channel at `~/.config/television/cable/sshfs-mounts.toml`.
 
 **sshfs.nvim config notes** (in `lua/gavin/plugins/sshfs.lua`):
+- `hooks.on_mount.auto_change_to_dir = true`: mounting runs `tcd <mount>` so tv.nvim / nvim-tree (cwd-based) target the remote immediately; unmount `tcd`s back to the previous dir.
 - `ui.local_picker` is the current key (not `ui.file_picker` — deprecated)
 - Plugin defaults include three invalid macOS option names (`dir_cache`, `dcache_timeout`, `dcache_max_size`). These are overridden to `false` in config; correct equivalents (`cache`, `cache_timeout`, `cache_max_size`) are set explicitly.
 - `MountPoint.unmount` is monkey-patched in the `config` function: tries `umount` first, falls back to `diskutil unmount force`. The plugin's built-in sequence only uses `diskutil unmount` (no force) which reliably fails on macFUSE mounts.

@@ -31,7 +31,7 @@ return {
 				clean_mount_folders = true,
 			},
 			on_mount = {
-				auto_change_to_dir = false,
+				auto_change_to_dir = true,
 				auto_run = "find",
 			},
 		},
