@@ -66,6 +66,37 @@ return {
 			return ok
 		end
 
+		-- Override mount: on macOS 27 + macFUSE 5, sshfs can't daemonize ("forking after
+		-- mount is not supported"), so it stays in the foreground and the plugin — which
+		-- waits for sshfs to exit — never reports until the mount dies (libfuse/sshfs#388).
+		-- Run `sshfs -f` in the background instead and exit once the mount point is live.
+		local Sshfs = require("sshfs.lib.sshfs")
+		local build_mount_command = Sshfs.build_mount_command
+		local wait_for_mount = [[
+mnt=$1; shift
+log=$(mktemp -t sshfs-nvim)
+sshfs -f "$@" >"$log" 2>&1 </dev/null &
+pid=$!
+i=0
+while [ $i -lt 60 ]; do
+  if [ "$(stat -f %d "$mnt" 2>/dev/null)" != "$(stat -f %d "$(dirname "$mnt")")" ]; then
+    rm -f "$log"; exit 0
+  fi
+  if ! kill -0 $pid 2>/dev/null; then
+    grep -v 'forking a threaded process' "$log" >&2; rm -f "$log"; exit 1
+  fi
+  sleep 0.25; i=$((i + 1))
+done
+kill $pid 2>/dev/null
+echo "timed out after 15s waiting for mount" >&2
+grep -v 'forking a threaded process' "$log" >&2; rm -f "$log"; exit 1
+]]
+		Sshfs.build_mount_command = function(host, mount_point, remote_path_suffix)
+			local cmd = build_mount_command(host, mount_point, remote_path_suffix)
+			table.remove(cmd, 1) -- drop "sshfs"; the script re-adds it with -f
+			return vim.list_extend({ "sh", "-c", wait_for_mount, "sshfs-fg", mount_point }, cmd)
+		end
+
 		-- Save a copy of the current buffer to a local path (prompted). The default
 		-- destination remembers the last directory used this session.
 		local last_dest_dir = vim.fn.expand("~/Downloads/")

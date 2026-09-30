@@ -275,6 +275,7 @@ diskutil unmount force ~/mnt/<host>
 - `hooks.on_mount.auto_change_to_dir = true`: mounting runs `tcd <mount>` so tv.nvim / nvim-tree (cwd-based) target the remote immediately; unmount `tcd`s back to the previous dir.
 - `ui.local_picker` is the current key (not `ui.file_picker` — deprecated)
 - Plugin defaults include three invalid macOS option names (`dir_cache`, `dcache_timeout`, `dcache_max_size`). These are overridden to `false` in config; correct equivalents (`cache`, `cache_timeout`, `cache_max_size`) are set explicitly.
+- `Sshfs.build_mount_command` is monkey-patched in `config` too: on macOS 27 + macFUSE 5.4, sshfs 2.10 can't daemonize (`fuse: forking after mount is not supported`, [libfuse/sshfs#388](https://github.com/libfuse/sshfs/issues/388)). It stays in the foreground, and since the plugin waits for sshfs to *exit*, a connect showed only "Connecting to X..." until the mount died, then reported "Connected" for a dead mount (E344 on the auto-`tcd`). The patch wraps the command in `sh -c` that runs `sshfs -f` in the background, polls (up to 15s) until the mount point's device ID differs from its parent's, then exits 0 — or exits 1 with sshfs's stderr if it dies. Remove once sshfs/macFUSE fix daemonizing.
 - `MountPoint.unmount` is monkey-patched in the `config` function: tries `umount` first, falls back to `diskutil unmount force`. The plugin's built-in sequence only uses `diskutil unmount` (no force) which reliably fails on macFUSE mounts.
 
 ### Fuzzy Finding (tv.nvim)
