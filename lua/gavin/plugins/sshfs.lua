@@ -65,5 +65,44 @@ return {
 			end
 			return ok
 		end
+
+		-- Save a copy of the current buffer to a local path (prompted). The default
+		-- destination remembers the last directory used this session.
+		local last_dest_dir = vim.fn.expand("~/Downloads/")
+		vim.keymap.set("n", "<leader>ms", function()
+			local src = vim.api.nvim_buf_get_name(0)
+			if src == "" then
+				vim.notify("Buffer has no file name", vim.log.levels.WARN)
+				return
+			end
+			local name = vim.fn.fnamemodify(src, ":t")
+			vim.ui.input(
+				{ prompt = "Copy buffer to: ", default = last_dest_dir .. name, completion = "file" },
+				function(dest)
+					if not dest or dest == "" then
+						return
+					end
+					dest = vim.fn.fnamemodify(vim.fn.expand(dest), ":p")
+					-- Trailing slash or existing directory: keep the original file name
+					if dest:sub(-1) == "/" or vim.fn.isdirectory(dest) == 1 then
+						dest = dest:match("^(.-)/*$") .. "/"
+						dest = dest .. name
+					end
+					if vim.uv.fs_stat(dest) and vim.fn.confirm("Overwrite " .. dest .. "?", "&Yes\n&No", 2) ~= 1 then
+						return
+					end
+					vim.fn.mkdir(vim.fn.fnamemodify(dest, ":h"), "p")
+					-- noautocmd: skip format-on-save so the copy matches the buffer and
+					-- the remote buffer itself is left untouched.
+					local ok, err = pcall(vim.cmd, "noautocmd keepalt silent write! " .. vim.fn.fnameescape(dest))
+					if not ok then
+						vim.notify("Copy failed: " .. err, vim.log.levels.ERROR)
+						return
+					end
+					last_dest_dir = vim.fn.fnamemodify(dest, ":h") .. "/"
+					vim.notify("Copied to " .. dest)
+				end
+			)
+		end, { desc = "Save copy of buffer to local path" })
 	end,
 }

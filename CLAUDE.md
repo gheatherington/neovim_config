@@ -248,6 +248,7 @@ Format-on-save is enabled (`async = false`, `timeout_ms = 5000`, `lsp_format = "
 | `<leader>mt` | `:SSHTerminal` | Open remote shell |
 | `<leader>mc` | `:SSHConfig` | Edit `~/.ssh/config` |
 | `<leader>mr` | `:SSHReload` | Reload SSH config |
+| `<leader>ms` | — | Save a copy of the current buffer to a local path (prompted; default `~/Downloads/`, then last-used dir). Trailing `/` = directory, keeps filename. Confirms overwrite. Custom — defined in `sshfs.lua` `config` |
 
 Mounts at `~/mnt/<host>`. Auto-unmounts on Neovim exit. Requires macFUSE + sshfs (`brew install --cask macfuse && brew install gromgit/fuse/sshfs-mac`). Once mounted, all local tools (tv.nvim, fzf-lua, nvim-tree, LSP) work against remote files normally.
 
