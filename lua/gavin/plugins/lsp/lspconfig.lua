@@ -142,6 +142,9 @@ return {
 
 		vim.lsp.enable("ruff")
 
+		local remote_python = require("gavin.remote_python")
+		remote_python.setup()
+
 		vim.lsp.config("basedpyright", {
 			settings = {
 				basedpyright = {
@@ -173,10 +176,14 @@ return {
 					},
 				},
 			},
+			-- Files on an sshfs mount are rooted at the mount (not above it), so
+			-- sibling packages on the remote resolve like they do there.
+			root_dir = remote_python.root_dir(vim.lsp.config.basedpyright.root_markers),
 			-- Resolved per project root rather than once at startup, so opening a
-			-- file in another project picks up that project's venv.
+			-- file in another project picks up that project's venv. On an sshfs
+			-- mount, use the remote's mirrored packages and Python version instead.
 			before_init = function(_, config)
-				local python_path = get_python_path(config.root_dir)
+				local python_path = remote_python.apply(config) or get_python_path(config.root_dir)
 				if python_path then
 					config.settings.python =
 						vim.tbl_deep_extend("force", config.settings.python or {}, { pythonPath = python_path })

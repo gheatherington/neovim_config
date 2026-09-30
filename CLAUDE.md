@@ -30,6 +30,7 @@ lua/gavin/
     options.lua       — all vim.opt settings
     keymaps.lua       — leader key + core keymaps
   lazy.lua            — lazy.nvim bootstrap and setup
+  remote_python.lua   — basedpyright support for Python files on sshfs mounts (not a plugin spec)
   plugins/
     init.lua          — base plugins (plenary, vim-tmux-navigator)
     lsp/
@@ -121,7 +122,7 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 |---|---|---|
 | `bashls` | `vim.lsp.config` + `vim.lsp.enable` | cmd: `bash-language-server start`, ft: bash, sh |
 | `ruff` | `vim.lsp.config` + `vim.lsp.enable` | Python linter-as-LSP; sole source of ruff diagnostics (not an nvim-lint linter) |
-| `basedpyright` | `vim.lsp.config` + `vim.lsp.enable` | Replaced pyright. Resolves the interpreter per project root in `before_init`: `.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3` → `python`. `typeCheckingMode = "standard"`, `diagnosticMode = "openFilesOnly"`, inlay hints on |
+| `basedpyright` | `vim.lsp.config` + `vim.lsp.enable` | Replaced pyright. Resolves the interpreter per project root in `before_init`: `.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3` → `python`. `typeCheckingMode = "standard"`, `diagnosticMode = "openFilesOnly"`, inlay hints on. On sshfs mounts, see **Remote Python** below |
 | `lua_ls` | `vim.lsp.config` + `vim.lsp.enable` | Lua API types for config/plugin editing come from lazydev.nvim |
 | html, cssls, tailwindcss, svelte, graphql, emmet_ls, prismals | mason-lspconfig `ensure_installed` | No explicit config; enabled by mason-lspconfig v2's `automatic_enable = true` |
 
@@ -132,6 +133,17 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 **`useLibraryCodeForTypes` is deliberately unset** — upstream discourages setting it, since it overrides per-project `pyproject.toml`. Default is already `true`.
 
 **mason-lspconfig v2:** `setup_handlers()` and `automatic_installation` were removed upstream; `automatic_enable` defaults to `true`, so every installed server is `vim.lsp.enable()`'d automatically. It is set to `{ exclude = { "pyright" } }` here: pyright was replaced by basedpyright, and if its mason package lingers on disk automatic_enable would silently run both at once. Servers configured explicitly in `lspconfig.lua` are simply enabled twice (idempotent).
+
+### Remote Python (files on sshfs mounts)
+
+basedpyright runs locally and can't execute the remote interpreter (e.g. ARM Linux on a Pi), so remote-only libraries would all show `Import "x" could not be resolved`. `lua/gavin/remote_python.lua` fixes this:
+
+- **Sync (`:RemotePySync [host]`, automatic on first Python file per host):** probes the remote's `python3` for its version and `site-packages`/`dist-packages` dirs, rsyncs only `.py`/`.pyi`/`py.typed` into `~/.cache/nvim/remote-python/<host>/root/<remote path>`, and creates **empty placeholder** files for `.so` modules (enough for import resolution; saves ~120 MB on qarm). Then `uv python install <version>` for a matching local interpreter. Writes `env.json` (`version`, `paths`, `python`) and runs `:lsp restart basedpyright`. Re-run `:RemotePySync` after installing packages on the remote.
+- **`root_dir`:** normal basedpyright root markers, but never above the mount root — so a sibling package (e.g. `P1/Common`) resolves when you mount its parent. Mount the directory that contains *all* your project's packages.
+- **`before_init`:** `remote_python.apply(config)` sets `basedpyright.analysis.extraPaths` to the mirror and returns the uv interpreter as `pythonPath` (so the target version matches the remote). Must **mutate** `config.settings` in place — the client already holds a reference to that table; reassigning it silently has no effect.
+- SSH reuses sshfs.nvim's ControlMaster socket (`~/.ssh/sockets/%C`) with `BatchMode=yes`, so sync needs an active or recent mount on hosts that need a password.
+- Uses the built-in `:lsp restart` (nvim 0.12), not `:LspRestart`, which only exists after nvim-lspconfig is loaded.
+- ruff is unaffected: it never resolves imports.
 
 ### LSP Keymaps (buffer-local, set on LspAttach)
 
