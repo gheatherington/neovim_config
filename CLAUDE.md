@@ -252,6 +252,13 @@ Format-on-save is enabled (`async = false`, `timeout_ms = 5000`, `lsp_format = "
 
 Mounts at `~/mnt/<host>`. Auto-unmounts on Neovim exit. Requires macFUSE + sshfs (`brew install --cask macfuse && brew install gromgit/fuse/sshfs-mac`). Once mounted, all local tools (tv.nvim, fzf-lua, nvim-tree, LSP) work against remote files normally.
 
+**Launching straight into a remote (`nvs`, defined in `~/.zshrc` — not in this repo):**
+```bash
+nvs                 # tv ssh-hosts picker (same channel as the `sshf` alias) → nvim +"SSHConnect <host>"
+nvs docker-server   # skip the picker
+```
+`nvs` reuses `~/.config/television/cable/ssh-hosts.toml` but overrides the channel's `enter` (which runs `ssh`) with `-k 'enter="confirm_selection"'` so tv prints the host instead. Note tv 0.15 `-k` syntax is `key="action"`, not `action="key"`. The mount-location prompt (home / root / custom) always appears — sshfs.nvim ignores a `host:/path` argument there. auto-session has `auto_restore = false`, so launch directory doesn't matter.
+
 **Manual mount/unmount (shell fallback):**
 ```bash
 # Mount
