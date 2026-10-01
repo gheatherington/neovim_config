@@ -206,5 +206,19 @@ return {
 			},
 		})
 		vim.lsp.enable("lua_ls")
+
+		-- Spell checking is split across two servers (both enabled by
+		-- mason-lspconfig's automatic_enable):
+		--   harper_ls: spelling + grammar, but only in comments and markdown/gitcommit
+		--   typos_lsp: known misspellings anywhere, incl. strings and identifiers
+		-- Add a word to harper's dictionary with <leader>ca on the diagnostic.
+		vim.lsp.config("harper_ls", {
+			settings = {
+				["harper-ls"] = {
+					-- Default "hint" is too faint to notice next to real diagnostics
+					diagnosticSeverity = "information",
+				},
+			},
+		})
 	end,
 }

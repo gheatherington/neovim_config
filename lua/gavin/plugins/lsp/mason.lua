@@ -47,6 +47,8 @@ return {
 				"prismals",
 				"basedpyright",
 				"bashls",
+				"harper_ls", -- spelling + grammar in comments and markdown
+				"typos_lsp", -- known misspellings anywhere, incl. strings and identifiers
 			},
 		})
 

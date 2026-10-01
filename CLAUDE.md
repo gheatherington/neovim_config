@@ -124,9 +124,13 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 | `ruff` | `vim.lsp.config` + `vim.lsp.enable` | Python linter-as-LSP; sole source of ruff diagnostics (not an nvim-lint linter) |
 | `basedpyright` | `vim.lsp.config` + `vim.lsp.enable` | Replaced pyright. Resolves the interpreter per project root in `before_init`: `.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3` → `python`. `typeCheckingMode = "standard"`, `diagnosticMode = "openFilesOnly"`, inlay hints on. On sshfs mounts, see **Remote Python** below |
 | `lua_ls` | `vim.lsp.config` + `vim.lsp.enable` | Lua API types for config/plugin editing come from lazydev.nvim |
+| `harper_ls` | mason-lspconfig `ensure_installed` + `vim.lsp.config` | Spelling + grammar. **Comments only** in code; full text in markdown/gitcommit. `diagnosticSeverity = "information"` (default `hint` is too faint). Add a word to its dictionary via `<leader>ca` |
+| `typos_lsp` | mason-lspconfig `ensure_installed` | Known-misspelling list (not a dictionary), so near-zero false positives. Runs on **every filetype** and checks strings and identifiers too. Per-project ignores go in `typos.toml` / `_typos.toml` |
 | html, cssls, tailwindcss, svelte, graphql, emmet_ls, prismals | mason-lspconfig `ensure_installed` | No explicit config; enabled by mason-lspconfig v2's `automatic_enable = true` |
 
 **Global capabilities:** `vim.lsp.config("*", { capabilities = cmp_nvim_lsp.default_capabilities() })` in `lspconfig.lua` advertises nvim-cmp's completion capabilities (snippet/resolve support) to every server.
+
+**Spell checking split:** Neovim's built-in `spell` is off. harper covers prose (comments, markdown, commit messages) including grammar; typos covers misspellings anywhere, including string literals and identifiers, which harper and built-in spell both skip. A common typo *inside a comment* is reported by both (sources `Harper` and `typos`) — accepted overlap, since harper's dictionary catches words typos' list doesn't. Note `typos-lsp --version` doesn't exist and just blocks waiting on stdin.
 
 **Python diagnostics split:** basedpyright reports type errors only; ruff reports lint only. basedpyright's `reportUnusedImport`/`reportUnusedVariable`/`reportDeprecated` are set to `"none"` because ruff already covers them — leaving them on reported every unused import twice. `typeCheckingMode` is pinned to `"standard"` because basedpyright's default is stricter than pyright's and floods the buffer with "Type of X is unknown".
 
