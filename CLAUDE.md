@@ -124,7 +124,7 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 | `ruff` | `vim.lsp.config` + `vim.lsp.enable` | Python linter-as-LSP; sole source of ruff diagnostics (not an nvim-lint linter) |
 | `basedpyright` | `vim.lsp.config` + `vim.lsp.enable` | Replaced pyright. Resolves the interpreter per project root in `before_init`: `.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3` → `python`. `typeCheckingMode = "standard"`, `diagnosticMode = "openFilesOnly"`, inlay hints on. On sshfs mounts, see **Remote Python** below |
 | `lua_ls` | `vim.lsp.config` + `vim.lsp.enable` | Lua API types for config/plugin editing come from lazydev.nvim |
-| `harper_ls` | mason-lspconfig `ensure_installed` + `vim.lsp.config` | Spelling + grammar. **Comments only** in code; full text in markdown/gitcommit. `diagnosticSeverity = "information"` (default `hint` is too faint). Add a word to its dictionary via `<leader>ca` |
+| `harper_ls` | mason-lspconfig `ensure_installed` + `vim.lsp.config` | Spelling + grammar. **Comments only** in code; full text in markdown/gitcommit. `diagnosticSeverity = "information"` (default `hint` is too faint). `dialect = "Canadian"` (colour/centre, but -ize like American). Add a word to its dictionary via `<leader>ca` |
 | `typos_lsp` | mason-lspconfig `ensure_installed` | Known-misspelling list (not a dictionary), so near-zero false positives. Runs on **every filetype** and checks strings and identifiers too. Per-project ignores go in `typos.toml` / `_typos.toml` |
 | html, cssls, tailwindcss, svelte, graphql, emmet_ls, prismals | mason-lspconfig `ensure_installed` | No explicit config; enabled by mason-lspconfig v2's `automatic_enable = true` |
 

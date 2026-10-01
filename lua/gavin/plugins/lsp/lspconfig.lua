@@ -217,6 +217,7 @@ return {
 				["harper-ls"] = {
 					-- Default "hint" is too faint to notice next to real diagnostics
 					diagnosticSeverity = "information",
+					dialect = "Canadian",
 				},
 			},
 		})
