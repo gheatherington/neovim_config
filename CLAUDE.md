@@ -174,6 +174,8 @@ basedpyright runs locally and can't execute the remote interpreter (e.g. ARM Lin
 
 **Linters** (via nvim-lint): `eslint_d` (JS/TS/Svelte) only.
 
+**Spell checkers** run as LSP servers, not nvim-lint linters: `harper_ls` + `typos_lsp` (see **Spell checking split** above).
+
 `ruff` and `shellcheck` are deliberately NOT nvim-lint linters: ruff already runs as an LSP server, and `bash-language-server` runs shellcheck internally. Listing either here produced every diagnostic twice.
 
 ### Format/Lint Keymaps
@@ -324,6 +326,10 @@ diskutil unmount force ~/mnt/<host>
 | `<leader>xd` | trouble | Document diagnostics |
 | `<leader>xq` | trouble | Quickfix list |
 | `<leader>xl` | trouble | Location list |
+| `<leader>D` | fzf-lua | Document diagnostics picker (fuzzy-filter by source, e.g. type `typos`) |
+| `<leader>d` / `]d` / `[d` | built-in | Line diagnostic float / next / prev |
+
+"Workspace" diagnostics only cover **open** files: basedpyright uses `diagnosticMode = "openFilesOnly"` and the other servers only analyse buffers they're attached to.
 
 ### Folding (nvim-ufo)
 | Key | Action |
