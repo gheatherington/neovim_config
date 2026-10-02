@@ -1,0 +1,7 @@
+dictionaries = [
+    "en_us",
+    "en_gb",
+]
+words = ["Pyzo"]
+ignore_patterns = ['\\[nrtbfv][A-Za-z]+']
+include_tags = ["string"]

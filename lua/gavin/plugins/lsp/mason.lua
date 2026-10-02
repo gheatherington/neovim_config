@@ -49,6 +49,7 @@ return {
 				"bashls",
 				"harper_ls", -- spelling + grammar in comments and markdown
 				"typos_lsp", -- known misspellings anywhere, incl. strings and identifiers
+				"codebook", -- dictionary spell check of string literals (see codebook.toml)
 			},
 		})
 

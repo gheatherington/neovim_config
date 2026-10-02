@@ -24,6 +24,7 @@ Remote: `https://github.com/gheatherington/neovim_config`
 ## Directory Structure
 
 ```
+codebook.toml         — codebook spell-checker config + word list (passed as globalConfigPath)
 lua/gavin/
   core/
     init.lua          — requires options + keymaps
@@ -125,12 +126,30 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 | `basedpyright` | `vim.lsp.config` + `vim.lsp.enable` | Replaced pyright. Resolves the interpreter per project root in `before_init`: `.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3` → `python`. `typeCheckingMode = "standard"`, `diagnosticMode = "openFilesOnly"`, inlay hints on. On sshfs mounts, see **Remote Python** below |
 | `lua_ls` | `vim.lsp.config` + `vim.lsp.enable` | Lua API types for config/plugin editing come from lazydev.nvim |
 | `harper_ls` | mason-lspconfig `ensure_installed` + `vim.lsp.config` | Spelling + grammar. **Comments only** in code; full text in markdown/gitcommit. `diagnosticSeverity = "information"` (default `hint` is too faint). `dialect = "Canadian"` (colour/centre, but -ize like American). Add a word to its dictionary via `<leader>ca` |
+| `codebook` | mason-lspconfig `ensure_installed` + `vim.lsp.config` | Full-dictionary spell check of **string literals only** (`include_tags = ["string"]` in `codebook.toml`). Code filetypes only — `markdown`/`gitcommit`/`text` removed from lspconfig's defaults since harper owns prose |
 | `typos_lsp` | mason-lspconfig `ensure_installed` | Known-misspelling list (not a dictionary), so near-zero false positives. Runs on **every filetype** and checks strings and identifiers too. Per-project ignores go in `typos.toml` / `_typos.toml` |
 | html, cssls, tailwindcss, svelte, graphql, emmet_ls, prismals | mason-lspconfig `ensure_installed` | No explicit config; enabled by mason-lspconfig v2's `automatic_enable = true` |
 
 **Global capabilities:** `vim.lsp.config("*", { capabilities = cmp_nvim_lsp.default_capabilities() })` in `lspconfig.lua` advertises nvim-cmp's completion capabilities (snippet/resolve support) to every server.
 
-**Spell checking split:** Neovim's built-in `spell` is off. harper covers prose (comments, markdown, commit messages) including grammar; typos covers misspellings anywhere, including string literals and identifiers, which harper and built-in spell both skip. A common typo *inside a comment* is reported by both (sources `Harper` and `typos`) — accepted overlap, since harper's dictionary catches words typos' list doesn't. Note `typos-lsp --version` doesn't exist and just blocks waiting on stdin.
+**Spell checking split** — three servers, one job each; Neovim's built-in `spell` stays off:
+
+| Server | Checks | Method |
+|---|---|---|
+| harper | Comments, markdown, commit messages | Dictionary + **grammar**, Canadian |
+| codebook | String literals only | Full dictionary (`en_us` + `en_gb`); skips hex colours, URLs, paths, UUIDs, hashes, words < 3 chars |
+| typos | Everything, incl. identifiers at use sites and non-code files | Curated list of ~known misspellings only, so near-zero false positives |
+
+harper can't check strings (harper#544, closed "not planned"); typos can't catch one-off typos (`Distanc`, `gmae`) — hence codebook. Built-in spell + spellwand.nvim was the runner-up (real `en_ca`), rejected for a young plugin with a multi-line-string position bug and per-language query maintenance.
+
+**codebook gotchas:**
+- **Config lives in `codebook.toml` at the repo root**, passed as `init_options.globalConfigPath`. A *project* `codebook.toml` is unreliable: codebook resolves it from its **process cwd**, not the LSP root (log showed `Project config: /private/tmp/codebook.toml`).
+- Add words with the **"Add to global dictionary"** code action — it writes into the repo's `codebook.toml` (commit it). Plain "Add to dictionary" would create a `codebook.toml` in whatever the cwd is. codebook **rewrites the file and strips comments**, so keep explanations here, not in the TOML.
+- **No `en_ca` dictionary** — `en_us` + `en_gb` together accept both `colour` and `color` in strings. Canadian spelling is only enforced in comments (harper).
+- **Escape bug** ([codebook#306](https://github.com/blopker/codebook/issues/306)): `"\nworld"` is read as `nworld`. `ignore_patterns = ['\\[nrtbfv][A-Za-z]+']` suppresses it — an ignore pattern only skips a word if it covers the *whole* word, hence the `[A-Za-z]+`. Trade-off: a typo directly after `\n`/`\t` is caught by nothing (typos glues the escape on too).
+- A common typo inside a string (e.g. `recieved`) is reported by both codebook and typos. Comment typos on typos' list are reported by both harper and typos.
+- Grammar inside strings isn't checked by anything.
+- `typos-lsp --version` doesn't exist and just blocks waiting on stdin (`codebook-lsp --version` is fine).
 
 **Python diagnostics split:** basedpyright reports type errors only; ruff reports lint only. basedpyright's `reportUnusedImport`/`reportUnusedVariable`/`reportDeprecated` are set to `"none"` because ruff already covers them — leaving them on reported every unused import twice. `typeCheckingMode` is pinned to `"standard"` because basedpyright's default is stricter than pyright's and floods the buffer with "Type of X is unknown".
 
@@ -174,7 +193,7 @@ basedpyright runs locally and can't execute the remote interpreter (e.g. ARM Lin
 
 **Linters** (via nvim-lint): `eslint_d` (JS/TS/Svelte) only.
 
-**Spell checkers** run as LSP servers, not nvim-lint linters: `harper_ls` + `typos_lsp` (see **Spell checking split** above).
+**Spell checkers** run as LSP servers, not nvim-lint linters: `harper_ls` + `codebook` + `typos_lsp` (see **Spell checking split** above).
 
 `ruff` and `shellcheck` are deliberately NOT nvim-lint linters: ruff already runs as an LSP server, and `bash-language-server` runs shellcheck internally. Listing either here produced every diagnostic twice.
 

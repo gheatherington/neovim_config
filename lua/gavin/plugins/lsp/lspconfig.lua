@@ -207,11 +207,12 @@ return {
 		})
 		vim.lsp.enable("lua_ls")
 
-		-- Spell checking is split across two servers (both enabled by
+		-- Spell checking is split across three servers (all enabled by
 		-- mason-lspconfig's automatic_enable):
 		--   harper_ls: spelling + grammar, but only in comments and markdown/gitcommit
+		--   codebook:  full dictionary check of string literals only (codebook.toml)
 		--   typos_lsp: known misspellings anywhere, incl. strings and identifiers
-		-- Add a word to harper's dictionary with <leader>ca on the diagnostic.
+		-- Add a word to a dictionary with <leader>ca on the diagnostic.
 		vim.lsp.config("harper_ls", {
 			settings = {
 				["harper-ls"] = {
@@ -220,6 +221,19 @@ return {
 					dialect = "Canadian",
 				},
 			},
+		})
+
+		vim.lsp.config("codebook", {
+			init_options = {
+				-- Settings and "Add to global dictionary" words live in this repo.
+				-- A project codebook.toml is unreliable: codebook looks for it in
+				-- its process cwd, not the LSP root.
+				globalConfigPath = vim.fs.joinpath(vim.fn.stdpath("config"), "codebook.toml"),
+			},
+			-- Code only: harper already covers these prose filetypes
+			filetypes = vim.tbl_filter(function(ft)
+				return not vim.tbl_contains({ "markdown", "gitcommit", "text" }, ft)
+			end, vim.lsp.config.codebook.filetypes),
 		})
 	end,
 }
