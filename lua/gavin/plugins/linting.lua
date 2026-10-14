@@ -10,6 +10,8 @@ return {
 			javascriptreact = { "eslint_d" },
 			typescriptreact = { "eslint_d" },
 			svelte = { "eslint_d" },
+			-- `zsh --no-exec` syntax check; ShellCheck doesn't support zsh
+			zsh = { "zsh" },
 			-- NOTE: python/sh/bash are deliberately absent here. ruff already runs
 			-- as an LSP server (vim.lsp.enable("ruff")) and bash-language-server
 			-- runs shellcheck internally; listing either as a nvim-lint linter

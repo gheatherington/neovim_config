@@ -121,7 +121,7 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 
 | Server | Config Method | Notes |
 |---|---|---|
-| `bashls` | `vim.lsp.config` + `vim.lsp.enable` | cmd: `bash-language-server start`, ft: bash, sh |
+| `bashls` | `vim.lsp.config` + `vim.lsp.enable` | cmd: `bash-language-server start`, ft: bash, sh, **zsh**. On zsh it gives hover/definitions/symbols only — ShellCheck can't lint zsh (bashls skips it without a shebang; `--exclude=SC1071` hides the "only supports sh/bash" error a zsh shebang causes) |
 | `ruff` | `vim.lsp.config` + `vim.lsp.enable` | Python linter-as-LSP; sole source of ruff diagnostics (not an nvim-lint linter) |
 | `basedpyright` | `vim.lsp.config` + `vim.lsp.enable` | Replaced pyright. Resolves the interpreter per project root in `before_init`: `.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3` → `python`. `typeCheckingMode = "standard"`, `diagnosticMode = "openFilesOnly"`, inlay hints on. On sshfs mounts, see **Remote Python** below |
 | `lua_ls` | `vim.lsp.config` + `vim.lsp.enable` | Lua API types for config/plugin editing come from lazydev.nvim |
@@ -189,9 +189,11 @@ basedpyright runs locally and can't execute the remote interpreter (e.g. ARM Lin
 
 ### Mason-Installed Tools
 
-**Formatters** (via conform.nvim): `prettier` (JS/TS/CSS/HTML/JSON/YAML/MD/GraphQL/Svelte/Liquid), `stylua` (Lua), `ruff_organize_imports` + `ruff_format` (Python), `beautysh` (sh/bash)
+**Formatters** (via conform.nvim): `prettier` (JS/TS/CSS/HTML/JSON/YAML/MD/GraphQL/Svelte/Liquid), `stylua` (Lua), `ruff_organize_imports` + `ruff_format` (Python), `beautysh` (sh/bash/zsh; `--indent-size` follows the buffer's `shiftwidth` — its default is 4)
 
-**Linters** (via nvim-lint): `eslint_d` (JS/TS/Svelte) only.
+**Linters** (via nvim-lint): `eslint_d` (JS/TS/Svelte), `zsh` (`zsh --no-exec` syntax check for zsh files — the only zsh linting, since ShellCheck doesn't support zsh).
+
+**Filetypes:** Neovim gives `.sh` and `.bash` files filetype `sh` (`b:is_bash` set), and `.zsh`/`.zshrc` filetype `zsh`. Shell tooling must list `zsh` explicitly — before it did, zsh files got no LSP, formatter or linter at all.
 
 **Spell checkers** run as LSP servers, not nvim-lint linters: `harper_ls` + `codebook` + `typos_lsp` (see **Spell checking split** above).
 

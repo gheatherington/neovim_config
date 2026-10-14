@@ -21,12 +21,21 @@ return {
 				lua = { "stylua" },
 				sh = { "beautysh" },
 				bash = { "beautysh" },
+				zsh = { "beautysh" },
 				python = { "ruff_organize_imports", "ruff_format" },
 			},
 			-- NOTE: timeout_ms is one shared budget for the WHOLE formatter chain
 			-- for a filetype, not per-formatter. Python previously chained isort
 			-- (~100ms) and black (~150ms) and would intermittently blow a 1000ms
 			-- ceiling; ruff does both steps in ~8ms each as a single binary.
+			formatters = {
+				-- beautysh defaults to 4-space indents; follow the buffer's shiftwidth
+				beautysh = {
+					prepend_args = function(_, ctx)
+						return { "--indent-size", tostring(vim.bo[ctx.buf].shiftwidth) }
+					end,
+				},
+			},
 			format_on_save = {
 				lsp_format = "fallback",
 				async = false,

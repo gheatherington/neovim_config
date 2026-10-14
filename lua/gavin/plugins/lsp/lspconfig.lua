@@ -107,9 +107,16 @@ return {
 			},
 		})
 
+		-- zsh is included for hover, go-to-definition and symbols. ShellCheck can't
+		-- lint zsh: bashls skips it for a .zsh file with no shebang, but a
+		-- `#!/usr/bin/env zsh` shebang gets one SC1071 "only supports sh/bash"
+		-- error, so that code is excluded. zsh syntax errors come from nvim-lint.
 		vim.lsp.config("bashls", {
 			cmd = { "bash-language-server", "start" },
-			filetypes = { "bash", "sh" },
+			filetypes = { "bash", "sh", "zsh" },
+			settings = {
+				bashIde = { shellcheckArguments = { "--exclude=SC1071" } },
+			},
 		})
 		vim.lsp.enable("bashls")
 
