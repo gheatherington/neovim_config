@@ -191,7 +191,7 @@ basedpyright runs locally and can't execute the remote interpreter (e.g. ARM Lin
 
 **Formatters** (via conform.nvim): `prettier` (JS/TS/CSS/HTML/JSON/YAML/MD/GraphQL/Svelte/Liquid), `stylua` (Lua), `ruff_organize_imports` + `ruff_format` (Python), `beautysh` (sh/bash/zsh; `--indent-size` follows the buffer's `shiftwidth` — its default is 4)
 
-**Linters** (via nvim-lint): `eslint_d` (JS/TS/Svelte), `zsh` (`zsh --no-exec` syntax check for zsh files — the only zsh linting, since ShellCheck doesn't support zsh).
+**Linters** (via nvim-lint): `eslint_d` (JS/TS/Svelte), `zsh` (`zsh --no-exec` syntax check) + `shellcheck_zsh` for zsh files. ShellCheck refuses zsh and bashls skips it, so `shellcheck_zsh` (custom, in `linting.lua`) runs ShellCheck with `--shell=bash` on stdin and drops zsh-incompatible checks: all SC1xxx parse errors, SC2086/2068 (zsh doesn't word-split), SC2128/2178 (arrays), SC2051 (`{1..$n}`), SC2296 (`${(k)x}` flags), and SC2154 for zsh's lowercase specials (`$path`, `$reply`, …). **Limit:** if a file uses zsh-only syntax the bash parser can't read (e.g. glob qualifiers `*(N)`), ShellCheck gives up on the whole file and only the syntax check runs — `~/.zshrc` is one such file.
 
 **Filetypes:** Neovim gives `.sh` and `.bash` files filetype `sh` (`b:is_bash` set), and `.zsh`/`.zshrc` filetype `zsh`. Shell tooling must list `zsh` explicitly — before it did, zsh files got no LSP, formatter or linter at all.
 
