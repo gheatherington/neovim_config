@@ -121,7 +121,7 @@ This config uses **two pickers** with distinct responsibilities. Do not merge th
 
 | Server | Config Method | Notes |
 |---|---|---|
-| `bashls` | `vim.lsp.config` + `vim.lsp.enable` | cmd: `bash-language-server start`, ft: bash, sh, **zsh**. On zsh it gives hover/definitions/symbols only — ShellCheck can't lint zsh (bashls skips it without a shebang; `--exclude=SC1071` hides the "only supports sh/bash" error a zsh shebang causes) |
+| `bashls` | `vim.lsp.config` + `vim.lsp.enable` | cmd: `bash-language-server start`, ft: bash, sh, **zsh**. On zsh it gives hover/definitions/symbols only — ShellCheck can't lint zsh (bashls skips it without a shebang; `--exclude=SC1071` hides the "only supports sh/bash" error a zsh shebang causes). zsh linting comes from nvim-lint's `shellcheck_zsh` instead — see **Linters** below |
 | `ruff` | `vim.lsp.config` + `vim.lsp.enable` | Python linter-as-LSP; sole source of ruff diagnostics (not an nvim-lint linter) |
 | `basedpyright` | `vim.lsp.config` + `vim.lsp.enable` | Replaced pyright. Resolves the interpreter per project root in `before_init`: `.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3` → `python`. `typeCheckingMode = "standard"`, `diagnosticMode = "openFilesOnly"`, inlay hints on. On sshfs mounts, see **Remote Python** below |
 | `lua_ls` | `vim.lsp.config` + `vim.lsp.enable` | Lua API types for config/plugin editing come from lazydev.nvim |
@@ -197,7 +197,7 @@ basedpyright runs locally and can't execute the remote interpreter (e.g. ARM Lin
 
 **Spell checkers** run as LSP servers, not nvim-lint linters: `harper_ls` + `codebook` + `typos_lsp` (see **Spell checking split** above).
 
-`ruff` and `shellcheck` are deliberately NOT nvim-lint linters: ruff already runs as an LSP server, and `bash-language-server` runs shellcheck internally. Listing either here produced every diagnostic twice.
+`ruff` and `shellcheck` are deliberately NOT nvim-lint linters for Python/sh/bash: ruff already runs as an LSP server, and `bash-language-server` runs shellcheck internally. Listing either here produced every diagnostic twice. The one exception is `shellcheck_zsh`, which is safe because bashls never runs shellcheck on zsh.
 
 ### Format/Lint Keymaps
 
@@ -422,7 +422,7 @@ The corrected config now lives at **`~/.config/ruff/ruff.toml`** (ruff's user-le
 All three previously-recorded known issues are resolved (see git history):
 
 1. ~~ruff runs twice~~ — fixed; ruff removed from nvim-lint, LSP server is the single source of ruff diagnostics.
-2. ~~beautysh and shellcheck unwired~~ — beautysh wired into conform for sh/bash; shellcheck reaches you via bash-language-server.
+2. ~~beautysh and shellcheck unwired~~ — beautysh wired into conform for sh/bash/zsh; shellcheck reaches you via bash-language-server (sh/bash) or nvim-lint's `shellcheck_zsh` (zsh).
 3. ~~Python path detection is startup-time only~~ — `get_python_path` now runs per project root inside basedpyright's `before_init`.
 
 **luarocks:** `rocks = { enabled = false }` is set in `lazy.lua`. No installed plugin needs a rock — the six shipping a `.rockspec` (gitsigns, nui, nvim-cmp, nvim-lint, nvim-lspconfig, plenary) all have a `/lua` dir, a simple build, and no non-Lua deps. Leaving it enabled only made `:checkhealth lazy` error about an unbuilt hererocks. Re-enable if a future plugin genuinely requires luarocks.
