@@ -238,7 +238,7 @@ Format-on-save is enabled (`async = false`, `timeout_ms = 5000`, `lsp_format = "
 - **Splits:** right + below
 - **Search:** ignorecase + smartcase
 - **`inccommand = "split"`:** `:substitute` shows a live preview of the resulting lines in a split before you commit (the default, `nosplit`, only highlights matches inline)
-- **No swapfile, no line wrap**
+- **No swapfile, no line wrap** — `linebreak` is on, so when wrap is toggled on (`<leader>tw`) lines break at word boundaries, not mid-word
 - **termguicolors:** true
 - **signcolumn:** always shown
 
