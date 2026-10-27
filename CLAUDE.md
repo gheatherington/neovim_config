@@ -86,6 +86,7 @@ lua/gavin/
 | render-markdown.nvim | main |
 | **sshfs.nvim** | main |
 | substitute.nvim | main |
+| **todo-comments.nvim** | main |
 | tokyonight.nvim | main |
 | trouble.nvim | main |
 | **tv.nvim** | main |
@@ -351,6 +352,16 @@ diskutil unmount force ~/mnt/<host>
 | `<leader>d` / `]d` / `[d` | built-in | Line diagnostic float / next / prev |
 
 "Workspace" diagnostics only cover **open** files: basedpyright uses `diagnosticMode = "openFilesOnly"` and the other servers only analyse buffers they're attached to.
+
+### TODO Comments (todo-comments.nvim)
+| Key | Action |
+|---|---|
+| `]t` / `[t` | Next / prev TODO comment (TODO, FIXME, HACK, WARN, PERF, NOTE, TEST) |
+| `<leader>ta` | Add a `TODO: ` comment above the current line and enter insert mode. Custom (`add_todo` in `todo-comments.lua`), uses the buffer's `commentstring` and keeps the line's indent |
+| `<leader>xt` | All TODOs in the project, in trouble |
+| `<leader>ft` | Find TODOs (`:TodoFzfLua`) |
+
+`<leader>ta` sits beside the tab keys under `<leader>t`. It's for "todo add", not a tab action.
 
 ### Folding (nvim-ufo)
 | Key | Action |
