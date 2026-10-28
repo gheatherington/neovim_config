@@ -77,6 +77,9 @@ return {
 					end, opts)
 				end
 
+				opts.desc = "Ignore spelling of word in this file"
+				keymap.set("n", "<leader>ci", require("gavin.spell_ignore").ignore_word, opts)
+
 				opts.desc = "Restart LSP"
 				keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
 			end,
@@ -242,5 +245,8 @@ return {
 				return not vim.tbl_contains({ "markdown", "gitcommit", "text" }, ft)
 			end, vim.lsp.config.codebook.filetypes),
 		})
+
+		-- Per-file word ignores for all three (<leader>ci); only harper has its own
+		require("gavin.spell_ignore").setup()
 	end,
 }

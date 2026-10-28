@@ -32,6 +32,7 @@ lua/gavin/
     keymaps.lua       — leader key + core keymaps
   lazy.lua            — lazy.nvim bootstrap and setup
   remote_python.lua   — basedpyright support for Python files on sshfs mounts (not a plugin spec)
+  spell_ignore.lua    — per-file word ignores for harper/codebook/typos (not a plugin spec)
   plugins/
     init.lua          — base plugins (plenary, vim-tmux-navigator)
     lsp/
@@ -150,6 +151,8 @@ harper can't check strings (harper#544, closed "not planned"); typos can't catch
 - **Escape bug** ([codebook#306](https://github.com/blopker/codebook/issues/306)): `"\nworld"` is read as `nworld`. `ignore_patterns = ['\\[nrtbfv][A-Za-z]+']` suppresses it — an ignore pattern only skips a word if it covers the *whole* word, hence the `[A-Za-z]+`. Trade-off: a typo directly after `\n`/`\t` is caught by nothing (typos glues the escape on too).
 - A common typo inside a string (e.g. `recieved`) is reported by both codebook and typos. Comment typos on typos' list are reported by both harper and typos.
 - Grammar inside strings isn't checked by anything.
+
+**Per-file ignores (`<leader>ci`)** — `lua/gavin/spell_ignore.lua`. Only harper has a native per-file dictionary, so this keeps its own list instead: `<leader>ci` on a flagged word adds it (lowercased) to `stdpath("data")/spell-ignore.json`, keyed by absolute file path, and wraps the `textDocument/publishDiagnostics` and `textDocument/diagnostic` handlers to drop matching diagnostics from `harper_ls`, `codebook` and `typos_lsp`. Matching is on the flagged range's text, case-insensitive. With several diagnostics under the cursor it takes the narrowest, so a spelling lint wins over a grammar lint spanning it. No un-ignore command: edit the JSON (lives outside the repo, so not committed), then `:lsp restart`.
 - `typos-lsp --version` doesn't exist and just blocks waiting on stdin (`codebook-lsp --version` is fine).
 
 **Python diagnostics split:** basedpyright reports type errors only; ruff reports lint only. basedpyright's `reportUnusedImport`/`reportUnusedVariable`/`reportDeprecated` are set to `"none"` because ruff already covers them — leaving them on reported every unused import twice. `typeCheckingMode` is pinned to `"standard"` because basedpyright's default is stricter than pyright's and floods the buffer with "Type of X is unknown".
@@ -186,6 +189,7 @@ basedpyright runs locally and can't execute the remote interpreter (e.g. ARM Lin
 | `[d` / `]d` | `vim.diagnostic.jump({ count = -1 / 1 })` | Navigate diagnostics |
 | `K` | `vim.lsp.buf.hover` | Hover documentation |
 | `<leader>ih` | `vim.lsp.inlay_hint.enable` | Toggle inlay hints (buffer-local) |
+| `<leader>ci` | `spell_ignore.ignore_word` | Ignore the flagged spelling under the cursor in this file (all three spell servers) |
 | `<leader>rs` | `:LspRestart<CR>` | Restart LSP |
 
 ### Mason-Installed Tools
