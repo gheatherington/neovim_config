@@ -360,6 +360,7 @@ diskutil unmount force ~/mnt/<host>
 | `<leader>ta` | Add a `TODO: ` comment above the current line and enter insert mode. Custom (`add_todo` in `todo-comments.lua`), uses the buffer's `commentstring` and keeps the line's indent |
 | `<leader>xt` | All TODOs in the project, in trouble |
 | `<leader>ft` | Find TODOs (`:TodoFzfLua`) |
+| `<leader>fT` | Find TODOs in the current file (fzf-lua). Calls `require("todo-comments.fzf").todo({ search_paths = … })` because `:TodoFzfLua` drops its arguments. Greps the file on disk, so unsaved edits don't show |
 
 `<leader>ta` sits beside the tab keys under `<leader>t`. It's for "todo add", not a tab action.
 

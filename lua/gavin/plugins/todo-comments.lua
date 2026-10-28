@@ -46,5 +46,13 @@ return {
 		{ "<leader>ta", add_todo, desc = "Add todo comment above line" },
 		{ "<leader>xt", "<cmd>Trouble todo toggle<CR>", desc = "Open todos in trouble" },
 		{ "<leader>ft", "<cmd>TodoFzfLua<CR>", desc = "Find todos" },
+		{
+			"<leader>fT",
+			function()
+				-- :TodoFzfLua drops its arguments, so scope the search via the Lua API
+				require("todo-comments.fzf").todo({ search_paths = { vim.api.nvim_buf_get_name(0) } })
+			end,
+			desc = "Find todos in current file",
+		},
 	},
 }
