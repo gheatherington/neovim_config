@@ -66,7 +66,8 @@ function M.run()
 	})
 	vim.bo[buf].bufhidden = "wipe"
 
-	vim.fn.jobstart({ python, file }, { term = true, cwd = dir })
+	-- -i keeps the interpreter open afterwards, with the script's globals loaded
+	vim.fn.jobstart({ python, "-i", file }, { term = true, cwd = dir })
 	vim.keymap.set("n", "q", "<cmd>close<CR>", { buffer = buf, desc = "Close output" })
 	vim.cmd.startinsert()
 end

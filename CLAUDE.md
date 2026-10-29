@@ -175,7 +175,7 @@ basedpyright runs locally and can't execute the remote interpreter (e.g. ARM Lin
 
 ### Running Python (`<leader>rp`)
 
-`lua/gavin/run_python.lua`, set up from `lspconfig.lua`. Saves if modified, then runs `<python> <file>` with `jobstart({ term = true })` in an 80% centred float, cwd = the file's directory. Interpreter comes from `run_python.python_path(root)` — the same resolver basedpyright's `before_init` uses (`.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3`), so a project venv works without activating it. Starts in terminal mode for `input()`; after exit any key closes it, or `<C-\><C-n>` then `q` to close while scrolling output. Runs **locally** — a file on an sshfs mount runs on the Mac, not the remote host (use `<leader>mt` for that).
+`lua/gavin/run_python.lua`, set up from `lspconfig.lua`. Saves if modified, then runs `<python> -i <file>` with `jobstart({ term = true })` in an 80% centred float, cwd = the file's directory. Interpreter comes from `run_python.python_path(root)` — the same resolver basedpyright's `before_init` uses (`.venv`/`venv`/`.env` → `$VIRTUAL_ENV` → `python3`), so a project venv works without activating it. `-i` leaves you in the REPL afterwards with the script's globals loaded (also after an uncaught exception, for poking at state). Starts in terminal mode; `exit()` / `<C-d>` ends the REPL, then any key closes the float, or `<C-\><C-n>` then `q` to close while scrolling output. Runs **locally** — a file on an sshfs mount runs on the Mac, not the remote host (use `<leader>mt` for that).
 
 ### LSP Keymaps (buffer-local, set on LspAttach)
 
@@ -194,7 +194,7 @@ basedpyright runs locally and can't execute the remote interpreter (e.g. ARM Lin
 | `[d` / `]d` | `vim.diagnostic.jump({ count = -1 / 1 })` | Navigate diagnostics |
 | `K` | `vim.lsp.buf.hover` | Hover documentation |
 | `<leader>ih` | `vim.lsp.inlay_hint.enable` | Toggle inlay hints (buffer-local) |
-| `<leader>rp` | `run_python.run` | Run the current Python file in a centred floating terminal (python buffers only; not LSP-gated) |
+| `<leader>rp` | `run_python.run` | Run the current Python file in a centred floating terminal, then stay in its REPL (python buffers only; not LSP-gated) |
 | `<leader>ci` | `spell_ignore.ignore_word` | Ignore the flagged spelling under the cursor in this file (all three spell servers) |
 | `<leader>rs` | `:LspRestart<CR>` | Restart LSP |
 
