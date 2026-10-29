@@ -123,32 +123,9 @@ return {
 		})
 		vim.lsp.enable("bashls")
 
-		-- Resolve the interpreter for a given project root: prefer an in-project
-		-- venv, then an activated $VIRTUAL_ENV, then whatever is on $PATH.
-		local function get_python_path(workspace)
-			if workspace then
-				for _, dir in ipairs({ ".venv", "venv", ".env" }) do
-					local candidate = vim.fs.joinpath(workspace, dir, "bin", "python")
-					if vim.fn.executable(candidate) == 1 then
-						return candidate
-					end
-				end
-			end
-
-			local venv = vim.env.VIRTUAL_ENV
-			if venv then
-				local candidate = vim.fs.joinpath(venv, "bin", "python")
-				if vim.fn.executable(candidate) == 1 then
-					return candidate
-				end
-			end
-
-			local exe = vim.fn.exepath("python3")
-			if exe == "" then
-				exe = vim.fn.exepath("python")
-			end
-			return exe ~= "" and exe or nil
-		end
+		local run_python = require("gavin.run_python")
+		run_python.setup()
+		local get_python_path = run_python.python_path
 
 		vim.lsp.enable("ruff")
 
