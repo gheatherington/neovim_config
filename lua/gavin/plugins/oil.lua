@@ -18,10 +18,14 @@ return {
 		keymap("n", "<leader>Ro", function()
 			vim.ui.input({ prompt = "SSH (user@host:/path): " }, function(input)
 				if input and input ~= "" then
-					-- support both "user@host" and "user@host:/path" formats
-					local host, path = input:match("^([^:]+):?(.*)")
-					path = (path and path ~= "") and path or "/"
-					vim.cmd("Oil oil-ssh://" .. host .. path)
+					-- "user@host" → home, "user@host:rel" → ~/rel, "user@host:/abs" → /abs.
+					-- oil-ssh paths are home-relative after one slash; an absolute
+					-- path needs a second one (oil-ssh://host//abs).
+					local host, path = input:match("^([^:]+):?(.*)$")
+					if path ~= "" and path:sub(-1) ~= "/" then
+						path = path .. "/"
+					end
+					vim.cmd("Oil oil-ssh://" .. host .. "/" .. path)
 				end
 			end)
 		end, { desc = "Remote: open SSH directory" })
