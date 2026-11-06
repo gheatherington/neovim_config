@@ -80,7 +80,9 @@ return {
 		-- Python: neither basedpyright nor indent folding gives a docstring its own
 		-- fold (its lines share the body's indent), so add one per multi-line
 		-- string statement, found with treesitter, on top of the lsp/indent folds.
-		local docstring_query = vim.treesitter.query.parse("python", "(expression_statement (string) @doc)")
+		-- Parsed lazily: at startup nvim-treesitter (which ships the python parser)
+		-- isn't on the runtimepath yet, so parsing here errors.
+		local docstring_query
 
 		local function add_docstring_folds(bufnr, ranges)
 			if not ranges then
@@ -89,6 +91,13 @@ return {
 			local parser = vim.treesitter.get_parser(bufnr, "python", { error = false })
 			if not parser then
 				return ranges
+			end
+			if not docstring_query then
+				local ok, q = pcall(vim.treesitter.query.parse, "python", "(expression_statement (string) @doc)")
+				if not ok then
+					return ranges
+				end
+				docstring_query = q
 			end
 			local root = parser:parse()[1]:root()
 			local starts = {}
