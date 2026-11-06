@@ -382,6 +382,10 @@ diskutil unmount force ~/mnt/<host>
 | `za` | Toggle fold |
 | `zK` | Peek fold (or LSP hover if not on fold) |
 
+**Clickable arrows:** left-click a fold arrow in the gutter to toggle that fold. The arrow in `statuscolumn` is wrapped in `%@v:lua.GavinFoldClick@…%T`; the handler (global, in `ufo.lua`) only acts on lines that show an arrow.
+
+**Python docstrings fold:** basedpyright has no `foldingRangeProvider`, so Python falls back to indent folding, which can't fold a docstring (its lines share the body's indent). The Python `provider_selector` returns a custom function: lsp → indent, plus one extra range per multi-line string statement (`(expression_statement (string))`, via treesitter). These have no fold `kind`, so they don't auto-close on open like `comment`/`imports` kinds do.
+
 ### Editing Utilities
 | Key | Plugin | Action |
 |---|---|---|

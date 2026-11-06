@@ -13,7 +13,27 @@ return {
 		opt.foldcolumn = "1"
 		-- vim.o.fillchars = [[eob: ,fold: ,foldopen:,foldsep:┃,foldclose:]]
 		opt.statuscolumn =
-			'%=%s%l %{foldlevel(v:lnum) > 0 ? (foldlevel(v:lnum) > foldlevel(v:lnum - 1) ? (foldclosed(v:lnum) == -1 ? "" : "") : " ") : " " }'
+			'%=%s%l %@v:lua.GavinFoldClick@%{foldlevel(v:lnum) > 0 ? (foldlevel(v:lnum) > foldlevel(v:lnum - 1) ? (foldclosed(v:lnum) == -1 ? "" : "") : " ") : " " }%T'
+
+		-- Left-click on a fold arrow toggles that fold (the arrow is wrapped in
+		-- %@...%T above). Only acts on lines that show an arrow.
+		function _G.GavinFoldClick(_, _, button, _)
+			if button ~= "l" then
+				return
+			end
+			local pos = vim.fn.getmousepos()
+			if pos.winid == 0 or pos.line == 0 then
+				return
+			end
+			vim.api.nvim_win_call(pos.winid, function()
+				local lnum = pos.line
+				if vim.fn.foldclosed(lnum) ~= -1 then
+					vim.cmd(lnum .. "foldopen")
+				elseif vim.fn.foldlevel(lnum) > vim.fn.foldlevel(lnum - 1) then
+					vim.cmd(lnum .. "foldclose")
+				end
+			end)
+		end
 
 		local map = vim.keymap
 
@@ -57,6 +77,47 @@ return {
 
 		vim.cmd("hi Folded guibg=NONE")
 
+		-- Python: neither basedpyright nor indent folding gives a docstring its own
+		-- fold (its lines share the body's indent), so add one per multi-line
+		-- string statement, found with treesitter, on top of the lsp/indent folds.
+		local docstring_query = vim.treesitter.query.parse("python", "(expression_statement (string) @doc)")
+
+		local function add_docstring_folds(bufnr, ranges)
+			if not ranges then
+				return ranges
+			end
+			local parser = vim.treesitter.get_parser(bufnr, "python", { error = false })
+			if not parser then
+				return ranges
+			end
+			local root = parser:parse()[1]:root()
+			local starts = {}
+			for _, r in ipairs(ranges) do
+				starts[r.startLine] = true
+			end
+			for _, node in docstring_query:iter_captures(root, bufnr) do
+				local srow, _, erow = node:range()
+				if erow > srow and not starts[srow] then
+					table.insert(ranges, { startLine = srow, endLine = erow })
+					starts[srow] = true
+				end
+			end
+			return ranges
+		end
+
+		local function python_folds(bufnr)
+			return ufo.getFolds(bufnr, "lsp")
+				:catch(function(err)
+					if type(err) == "string" and err:match("UfoFallbackException") then
+						return ufo.getFolds(bufnr, "indent")
+					end
+					return require("promise").reject(err)
+				end)
+				:thenCall(function(ranges)
+					return add_docstring_folds(bufnr, ranges)
+				end)
+		end
+
 		ufo.setup({
 			open_fold_hl_timeout = 150,
 			close_fold_kinds_for_ft = {
@@ -82,7 +143,10 @@ return {
 				},
 			},
 			fold_virt_text_handler = handler,
-			provider_selector = function(bufnr, filetype, buftype)
+			provider_selector = function(_, filetype)
+				if filetype == "python" then
+					return python_folds
+				end
 				return { "lsp", "indent" }
 			end,
 		})
