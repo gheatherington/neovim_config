@@ -282,6 +282,8 @@ Format-on-save is enabled (`async = false`, `timeout_ms = 5000`, `lsp_format = "
 
 **oil.nvim in-buffer keys:** `<CR>` open, `-` up a directory, `<C-s>` vsplit, `<C-t>` new tab, `<C-p>` preview, `<C-r>` refresh, `g.` toggle hidden, `g?` help. Note: `<C-h>` and `<C-l>` disabled (vim-tmux-navigator conflict).
 
+**oil-ssh and password-only hosts:** oil lists directories over an interactive `ssh` session but reads and writes files with a separate `scp` that has no terminal, so `scp` can't prompt for a password (`Permission denied`). `oil.lua` wraps `create_ssh_command` to make the session a ControlMaster at `~/.ssh/sockets/%C` (same socket as sshfs.nvim) and passes that `ControlPath` through `extra_scp_args`, so `scp` reuses the authenticated connection.
+
 ### Remote / SSH (sshfs.nvim)
 | Key | Command | Action |
 |---|---|---|
